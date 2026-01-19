@@ -1,0 +1,43 @@
+<% const formatPrice = (value) => new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(value); %>
+<section class="hero fade-in">
+  <div class="hero-card">
+    <span class="hero-tag">결제 완료</span>
+    <h1 class="hero-title">주문이 접수되었습니다</h1>
+    <% if (!order) { %>
+      <p class="hero-copy">주문 정보를 찾을 수 없습니다.</p>
+    <% } else { %>
+      <p class="hero-copy">주문번호 <strong><%= order.orderCode %></strong> 로 결제 결과를 확인할 수 있습니다.</p>
+      <div style="margin-top: 16px; display: grid; gap: 8px;">
+        <div class="badge">상태: <span class="status"><%= order.status %></span></div>
+        <div class="badge">결제금액: <strong><%= formatPrice(order.totalAmount) %></strong></div>
+        <% if (order.stripeReceiptUrl) { %>
+          <a class="btn btn-secondary" href="<%= order.stripeReceiptUrl %>" target="_blank">영수증 보기</a>
+        <% } %>
+        <% if (order.status === 'paid') { %>
+          <form method="post" action="/api/payments/refund">
+            <input type="hidden" name="orderCode" value="<%= order.orderCode %>" />
+            <button class="btn btn-secondary" type="submit">전액 환불</button>
+          </form>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+  <div class="hero-card">
+    <h2 class="section-title">주문 내역</h2>
+    <% if (order) { %>
+      <% order.items.forEach((item) => { %>
+        <div class="cart-item">
+          <img src="<%= item.productImageUrl %>" alt="<%= item.productName %>" />
+          <div>
+            <strong><%= item.productName %></strong>
+            <p><%= item.quantity %>개</p>
+          </div>
+          <div class="price"><%= formatPrice(item.lineTotal) %></div>
+        </div>
+      <% }) %>
+    <% } %>
+    <div style="margin-top: 20px;">
+      <a class="btn btn-primary" href="/shop">스토어로 돌아가기</a>
+    </div>
+  </div>
+</section>

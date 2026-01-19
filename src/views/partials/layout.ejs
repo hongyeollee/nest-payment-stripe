@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof title !== 'undefined' ? title : 'Stripe MVC Shop' %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink-900: #0d0f12;
+        --ink-700: #2a3037;
+        --ink-500: #5c656f;
+        --mist-100: #f5f2ee;
+        --mist-200: #ebe4dc;
+        --mist-300: #dfd4c9;
+        --sand-100: #f7f0e8;
+        --sand-200: #ebdfd3;
+        --clay-200: #c39b7d;
+        --clay-400: #9b6b4a;
+        --clay-600: #7a4f33;
+        --teal-300: #6fd0c6;
+        --teal-500: #2b8f8a;
+        --shadow-soft: 0 22px 50px rgba(15, 18, 22, 0.12);
+        --shadow-card: 0 16px 40px rgba(29, 26, 22, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        color: var(--ink-900);
+        background: radial-gradient(circle at top, #fefcf9 0%, var(--mist-200) 40%, #d8c8bb 100%);
+        min-height: 100vh;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: 'DM Serif Display', 'Times New Roman', serif;
+        font-weight: 400;
+        margin: 0;
+      }
+
+      p {
+        margin: 0;
+        color: var(--ink-500);
+        line-height: 1.6;
+      }
+
+      .shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 32px;
+        align-items: center;
+        margin-bottom: 48px;
+      }
+
+      .hero-card {
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: var(--shadow-soft);
+        border-radius: 24px;
+        padding: 32px;
+        backdrop-filter: blur(20px);
+      }
+
+      .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--clay-600);
+        background: rgba(195, 155, 125, 0.18);
+        padding: 8px 16px;
+        border-radius: 999px;
+      }
+
+      .hero-title {
+        font-size: clamp(32px, 5vw, 52px);
+        margin-top: 16px;
+        margin-bottom: 16px;
+        color: var(--ink-900);
+      }
+
+      .hero-copy {
+        font-size: 16px;
+        margin-bottom: 24px;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        border: none;
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-primary {
+        background: var(--teal-500);
+        color: white;
+        box-shadow: 0 18px 30px rgba(43, 143, 138, 0.22);
+      }
+
+      .btn-secondary {
+        background: white;
+        color: var(--ink-700);
+        border: 1px solid var(--mist-300);
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 24px rgba(16, 20, 24, 0.12);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 22px;
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+      }
+
+      .card-body {
+        padding: 18px 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        flex: 1;
+      }
+
+      .price {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--ink-900);
+      }
+
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .cart-panel {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .cart-item {
+        display: grid;
+        grid-template-columns: 52px 1fr auto;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--mist-200);
+      }
+
+      .cart-item:last-child {
+        border-bottom: none;
+      }
+
+      .cart-item img {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        object-fit: cover;
+      }
+
+      .cart-total {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 16px;
+        font-weight: 600;
+      }
+
+      .section-title {
+        font-size: 28px;
+        margin-bottom: 18px;
+      }
+
+      .checkout-form {
+        display: grid;
+        gap: 14px;
+        margin-top: 24px;
+      }
+
+      .checkout-form input,
+      .checkout-form textarea,
+      .checkout-form select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--mist-300);
+        font-size: 14px;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      }
+
+      .row {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
+
+      .stripe-card {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--mist-300);
+        background: white;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--clay-600);
+      }
+
+      .status {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(43, 143, 138, 0.12);
+        color: var(--teal-500);
+        font-weight: 600;
+        font-size: 12px;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.6s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell"><%- body %></main>
+  </body>
+</html>

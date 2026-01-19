@@ -1,0 +1,153 @@
+<% const formatPrice = (value) => new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(value); %>
+<section class="hero fade-in">
+  <div class="hero-card">
+    <span class="hero-tag">Stripe Checkout Lab</span>
+    <h1 class="hero-title">Warm Cart Studio</h1>
+    <p class="hero-copy">장바구니를 담고, 주문을 생성한 뒤 Stripe Payment Element로 결제를 완료하세요.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" type="button" onclick="document.getElementById('checkout').scrollIntoView({ behavior: 'smooth' })">지금 결제 테스트</button>
+      <button class="btn btn-secondary" type="button" onclick="document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' })">상품 살펴보기</button>
+    </div>
+  </div>
+  <div class="hero-card">
+    <h2 class="section-title">장바구니 요약</h2>
+    <div class="cart-panel">
+      <% if (!cart.items.length) { %>
+        <p>장바구니가 비어있어요. 상품을 추가해주세요.</p>
+      <% } else { %>
+        <% cart.items.forEach((item) => { %>
+          <div class="cart-item">
+            <img src="<%= item.product.imageUrl %>" alt="<%= item.product.name %>" />
+            <div>
+              <strong><%= item.product.name %></strong>
+              <p><%= item.quantity %>개</p>
+            </div>
+            <div class="price"><%= formatPrice(item.lineTotal) %></div>
+          </div>
+        <% }) %>
+        <div class="cart-total">
+          <span>합계</span>
+          <span><%= formatPrice(cart.totalAmount) %></span>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<section id="catalog" class="fade-in">
+  <h2 class="section-title">상품 카탈로그</h2>
+  <div class="grid">
+    <% products.forEach((product) => { %>
+      <div class="card">
+        <img src="<%= product.imageUrl %>" alt="<%= product.name %>" />
+        <div class="card-body">
+          <h3><%= product.name %></h3>
+          <p><%= product.description %></p>
+          <div class="meta">
+            <span class="price"><%= formatPrice(product.price) %></span>
+            <form method="post" action="/cart/add">
+              <input type="hidden" name="productId" value="<%= product.id %>" />
+              <input type="hidden" name="quantity" value="1" />
+              <button class="btn btn-primary" type="submit">담기</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<section id="checkout" class="fade-in" style="margin-top: 48px;">
+  <h2 class="section-title">배송 및 결제</h2>
+  <div class="hero">
+    <div class="hero-card">
+      <form id="order-form" class="checkout-form">
+        <input type="hidden" name="cartId" value="<%= cart.sessionId %>" />
+        <input type="text" name="customerName" placeholder="수령인 이름" required />
+        <input type="email" name="customerEmail" placeholder="이메일" required />
+        <input type="text" name="contactNumber" placeholder="연락처" required />
+        <textarea name="shippingAddress" rows="3" placeholder="배송지 주소" required></textarea>
+        <button class="btn btn-primary" type="submit">주문 생성</button>
+      </form>
+      <div id="order-result" style="margin-top: 16px;"></div>
+    </div>
+    <div class="hero-card">
+      <div class="badge">
+        <span>Stripe Payment Element</span>
+        <span class="status">데모</span>
+      </div>
+      <div id="payment-element" class="stripe-card" style="margin-top: 16px;"></div>
+      <button class="btn btn-primary" id="pay-button" style="margin-top: 16px; width: 100%;">결제 진행</button>
+      <div id="payment-message" style="margin-top: 12px;"></div>
+    </div>
+  </div>
+</section>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe('<%= stripePublishableKey %>');
+  let clientSecret = null;
+  let orderCode = null;
+  let elements = null;
+
+  const orderForm = document.getElementById('order-form');
+  const orderResult = document.getElementById('order-result');
+  const payButton = document.getElementById('pay-button');
+  const paymentMessage = document.getElementById('payment-message');
+
+  orderForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    orderResult.textContent = '주문 생성 중...';
+
+    const formData = new FormData(orderForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      orderResult.textContent = '주문 생성 실패. 장바구니를 확인하세요.';
+      return;
+    }
+
+    const order = await response.json();
+    orderCode = order.orderCode;
+    orderResult.innerHTML = `<strong>주문번호:</strong> ${orderCode}`;
+
+    const intentResponse = await fetch('/api/payments/intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderCode }),
+    });
+
+    const intent = await intentResponse.json();
+    clientSecret = intent.clientSecret;
+
+    elements = stripe.elements({ clientSecret });
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element');
+  });
+
+  payButton.addEventListener('click', async () => {
+    if (!clientSecret || !elements) {
+      paymentMessage.textContent = '먼저 주문을 생성하세요.';
+      return;
+    }
+
+    paymentMessage.textContent = '결제 진행 중...';
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/orders/${orderCode}`,
+      },
+    });
+
+    if (error) {
+      paymentMessage.textContent = error.message;
+    }
+  });
+</script>
