@@ -1,64 +1,41 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, OneToMany } from 'typeorm';
-import { BaseEntity } from '../common/entities/base.entity';
-import { OrderItem } from './order-item.entity';
+import { OrderItem } from '../order-item.entity';
+import { OrderStatus } from '../order.entity';
 
-export enum OrderStatus {
-  Pending = 'pending',
-  Paid = 'paid',
-  Cancelled = 'cancelled',
-  Refunded = 'refunded',
-}
-
-@Entity('orders')
-export class Order extends BaseEntity {
+export class OrderResponseDto {
   @ApiProperty({ example: 'ORD-1a2b3c4d' })
-  @Column({ length: 80, unique: true })
   orderCode: string;
 
   @ApiProperty({ example: 'Lee Hyori' })
-  @Column({ length: 80 })
   customerName: string;
 
   @ApiProperty({ example: 'lee@example.com' })
-  @Column({ length: 120 })
   customerEmail: string;
 
   @ApiProperty({ example: 'Seoul street 1' })
-  @Column({ length: 120 })
   shippingAddress: string;
 
   @ApiProperty({ example: '01012341234' })
-  @Column({ length: 30 })
   contactNumber: string;
 
   @ApiProperty({ example: 54000 })
-  @Column({ type: 'int', default: 0 })
   totalAmount: number;
 
   @ApiProperty({ example: 'KRW' })
-  @Column({ length: 20, default: 'KRW' })
   currency: string;
 
   @ApiProperty({ enum: OrderStatus, example: OrderStatus.Pending })
-  @Column({ length: 40, default: OrderStatus.Pending })
   status: OrderStatus;
 
   @ApiProperty({ example: 'pi_123', nullable: true })
-  @Column({ type: 'varchar', nullable: true, length: 120 })
   stripePaymentIntentId: string | null;
 
   @ApiProperty({ example: 'ch_123', nullable: true })
-  @Column({ type: 'varchar', nullable: true, length: 120 })
   stripeChargeId: string | null;
 
   @ApiProperty({ example: 'https://receipt', nullable: true })
-  @Column({ type: 'varchar', nullable: true, length: 120 })
   stripeReceiptUrl: string | null;
 
   @ApiProperty({ type: () => OrderItem, isArray: true })
-  @OneToMany(() => OrderItem, (item) => item.order, {
-    cascade: true,
-  })
   items: OrderItem[];
 }

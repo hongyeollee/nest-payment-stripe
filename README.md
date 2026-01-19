@@ -59,6 +59,7 @@ npm run start:dev
 접속 URL
 
 - 스토어: http://localhost:3000/shop
+- Swagger: http://localhost:3000/api/docs
 
 ## 결제 테스트
 
