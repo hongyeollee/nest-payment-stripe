@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Column, Entity } from 'typeorm';
 import { BaseEntity } from '../common/entities/base.entity';
 
@@ -40,7 +40,10 @@ export class Payment extends BaseEntity {
   @Column({ length: 20, default: 'KRW' })
   currency: string;
 
-  @ApiProperty({ type: 'object', required: false })
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: true,
+  })
   @Column({ type: 'json', nullable: true })
   metadata: Record<string, any> | null;
 }
