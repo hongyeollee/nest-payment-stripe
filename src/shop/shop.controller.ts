@@ -2,12 +2,14 @@ import { Controller, Get, Render, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { ProductsService } from '../products/products.service';
 import { CartService } from '../cart/cart.service';
+import { PaymentsCoreService } from '../payments-core/payments-core.service';
 
 @Controller('shop')
 export class ShopController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly cartService: CartService,
+    private readonly paymentsCoreService: PaymentsCoreService,
   ) {}
 
   @Get()
@@ -23,7 +25,7 @@ export class ShopController {
     return {
       products,
       cart,
-      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY ?? '',
+      stripePublishableKey: this.paymentsCoreService.getPublishableKey(),
     };
   }
 }

@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { ShopController } from './shop.controller';
 import { ProductsService } from '../products/products.service';
 import { CartService } from '../cart/cart.service';
+import { PaymentsCoreService } from '../payments-core/payments-core.service';
 
 const createRequest = (session: Record<string, any> = {}) => ({
   session,
@@ -21,6 +22,10 @@ describe('ShopController', () => {
       providers: [
         { provide: ProductsService, useValue: productsService },
         { provide: CartService, useValue: cartService },
+        {
+          provide: PaymentsCoreService,
+          useValue: { getPublishableKey: jest.fn().mockReturnValue('pk_test') },
+        },
       ],
     }).compile();
 

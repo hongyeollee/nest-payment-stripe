@@ -29,6 +29,7 @@ import { OrderCodeDto } from './dto/order-code.dto';
 import { PaymentIntentResponseDto } from './dto/payment-intent-response.dto';
 import { PaymentResponseDto } from './dto/payment-response.dto';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
+import { PaymentsCoreService } from '../payments-core/payments-core.service';
 
 const paymentResponseExample = {
   orderCode: 'ORD-1a2b3c4d',
@@ -85,7 +86,10 @@ const paymentBadRequestExample = {
 @ApiTags('Payments')
 @ApiExtraModels(PaymentResponseDto, PaymentIntentResponseDto, ErrorResponseDto)
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly paymentsCoreService: PaymentsCoreService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: '결제 목록 조회' })
@@ -176,9 +180,7 @@ export class PaymentsController {
     @Res() response: Response,
     @Headers('stripe-signature') signature: string,
   ) {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-      apiVersion: '2025-12-15.clover',
-    });
+    const stripe = this.paymentsCoreService.getStripeClient();
 
     let event: Stripe.Event;
 
@@ -186,7 +188,7 @@ export class PaymentsController {
       event = stripe.webhooks.constructEvent(
         request.body,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET ?? '',
+        this.paymentsCoreService.getWebhookSecret(),
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
