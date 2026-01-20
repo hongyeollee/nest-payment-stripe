@@ -94,6 +94,18 @@ stripe listen --forward-to localhost:3000/api/payments/webhook
 - Stripe 클라이언트/웹훅 시크릿/퍼블리시 키는 `PaymentsCoreModule.forRootFromEnv()`에서 주입됩니다.
 - 프로젝트마다 환경변수만 다르게 주입하면 동일 모듈을 그대로 사용할 수 있습니다.
 
+### 사용 예시
+
+```ts
+import { Module } from '@nestjs/common';
+import { PaymentsCoreModule } from './payments-core/payments-core.module';
+
+@Module({
+  imports: [PaymentsCoreModule.forRootFromEnv()],
+})
+export class AppModule {}
+```
+
 ### 주문 어댑터(확장 포인트)
 
 결제 모듈을 다른 도메인에 붙일 때는 주문 도메인과의 연결 지점이 필요합니다.
@@ -103,7 +115,15 @@ stripe listen --forward-to localhost:3000/api/payments/webhook
 
 현재는 `OrdersService`가 이 역할을 담당하며, 다른 프로젝트에서는 아래와 같은 형태로 어댑터를 구성하는 것을 권장합니다.
 
-- `OrderPort` 인터페이스 정의 (주문 조회/상태 업데이트)
+```ts
+export interface OrderPort {
+  findByCode(orderCode: string): Promise<Order>;
+  markPaid(orderCode: string, paymentIntentId: string): Promise<void>;
+  markCancelled(orderCode: string): Promise<void>;
+  markRefunded(orderCode: string): Promise<void>;
+}
+```
+
 - 결제 모듈은 `OrderPort`만 의존
 - 실제 도메인 구현체를 주입
 
@@ -115,7 +135,22 @@ stripe listen --forward-to localhost:3000/api/payments/webhook
 - `forRoot(config)` 기반 API 유지
 - 조직 내 다른 서비스에서 `npm install`로 사용
 
+## 운영 안정화
+
+- `DB_SYNCHRONIZE`를 운영에서는 `false`로 설정
+- `DB_LOGGING`으로 SQL 로깅 제어
+
+## 배포 (Docker)
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+- 앱 컨테이너: http://localhost:3000
+- DB 포트: 3307
+
 ## 개발 참고
 
 - `synchronize: true`로 설정되어 있어 실행 시 자동으로 테이블이 생성됩니다.
 - Stripe 결제 승인 결과는 Webhook 이벤트로 최종 반영됩니다.
+- 운영 환경에서는 마이그레이션 기반으로 스키마 관리가 필요합니다.
