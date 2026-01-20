@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      SESSION_SECRET: change-me
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: app
+      DB_PASSWORD: app
+      DB_NAME: stripe_mvc
+      DB_SYNCHRONIZE: "false"
+      DB_LOGGING: "false"
+      PAYMENT_STRIPE_SECRET_KEY: sk_test_xxx
+      PAYMENT_STRIPE_PUBLISHABLE_KEY: pk_test_xxx
+      PAYMENT_STRIPE_WEBHOOK_SECRET: whsec_xxx
+      PAYMENT_STRIPE_API_VERSION: 2025-12-15.clover
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: stripe_mvc
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_prod_data:/var/lib/mysql
+
+volumes:
+  mysql_prod_data:
