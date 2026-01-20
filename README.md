@@ -17,6 +17,7 @@ Stripe Payment Element 기반으로 장바구니 → 주문 생성 → 결제 �
 - EJS + express-ejs-layouts
 - TypeORM + MySQL
 - Stripe SDK (Payment Element)
+- 내부 결제 모듈: payments-core
 
 ## 사전 준비
 
@@ -38,11 +39,12 @@ npm install
 cp .env.example .env
 ```
 
-필수 값
+필수 값 (payments-core 모듈 기준)
 
-- `STRIPE_SECRET_KEY`
-- `STRIPE_PUBLISHABLE_KEY`
-- `STRIPE_WEBHOOK_SECRET`
+- `PAYMENT_STRIPE_SECRET_KEY`
+- `PAYMENT_STRIPE_PUBLISHABLE_KEY`
+- `PAYMENT_STRIPE_WEBHOOK_SECRET`
+- `PAYMENT_STRIPE_API_VERSION` (선택)
 
 ## 로컬 DB 실행
 
@@ -84,6 +86,34 @@ stripe listen --forward-to localhost:3000/api/payments/webhook
 - 결제 Intent: `POST /api/payments/intent`
 - 환불: `POST /api/payments/refund`
 - 웹훅: `POST /api/payments/webhook`
+
+## payments-core 모듈화
+
+현재 결제 연동은 `src/payments-core`에 모듈화되어 있습니다.
+
+- Stripe 클라이언트/웹훅 시크릿/퍼블리시 키는 `PaymentsCoreModule.forRootFromEnv()`에서 주입됩니다.
+- 프로젝트마다 환경변수만 다르게 주입하면 동일 모듈을 그대로 사용할 수 있습니다.
+
+### 주문 어댑터(확장 포인트)
+
+결제 모듈을 다른 도메인에 붙일 때는 주문 도메인과의 연결 지점이 필요합니다.
+
+- 결제 성공 시: 주문 상태 업데이트, 재고 차감, 알림 발송
+- 결제 실패/취소 시: 주문 상태 롤백
+
+현재는 `OrdersService`가 이 역할을 담당하며, 다른 프로젝트에서는 아래와 같은 형태로 어댑터를 구성하는 것을 권장합니다.
+
+- `OrderPort` 인터페이스 정의 (주문 조회/상태 업데이트)
+- 결제 모듈은 `OrderPort`만 의존
+- 실제 도메인 구현체를 주입
+
+### npm 패키지로 확장
+
+`payments-core`는 내부 모듈 형태로 분리되어 있으므로, 다음 단계를 통해 별도 패키지로 확장 가능합니다.
+
+- `src/payments-core`를 별도 패키지로 분리
+- `forRoot(config)` 기반 API 유지
+- 조직 내 다른 서비스에서 `npm install`로 사용
 
 ## 개발 참고
 

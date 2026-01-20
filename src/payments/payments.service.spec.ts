@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { PaymentsService } from './payments.service';
 import { Payment, PaymentStatus } from './payment.entity';
 import { OrdersService } from '../orders/orders.service';
+import { PaymentsCoreService } from '../payments-core/payments-core.service';
 
 const paymentIntentsCreate = jest.fn();
 const paymentIntentsRetrieve = jest.fn();
@@ -57,6 +58,14 @@ describe('PaymentsService', () => {
         PaymentsService,
         { provide: getRepositoryToken(Payment), useValue: paymentsRepository },
         { provide: OrdersService, useValue: ordersService },
+        {
+          provide: PaymentsCoreService,
+          useValue: {
+            getStripeClient: jest.fn().mockReturnValue(new (Stripe as any)()),
+            getPublishableKey: jest.fn(),
+            getWebhookSecret: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

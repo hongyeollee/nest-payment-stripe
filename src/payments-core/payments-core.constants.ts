@@ -1,0 +1,1 @@
+export const PAYMENTS_CORE_CONFIG = Symbol('PAYMENTS_CORE_CONFIG');

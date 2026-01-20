@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import Stripe from 'stripe';
 import { Payment, PaymentStatus } from './payment.entity';
 import { OrdersService } from '../orders/orders.service';
+import { PaymentsCoreService } from '../payments-core/payments-core.service';
 
 @Injectable()
 export class PaymentsService {
@@ -13,10 +14,9 @@ export class PaymentsService {
     @InjectRepository(Payment)
     private readonly paymentsRepository: Repository<Payment>,
     private readonly ordersService: OrdersService,
+    private readonly paymentsCoreService: PaymentsCoreService,
   ) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-      apiVersion: '2025-12-15.clover',
-    });
+    this.stripe = this.paymentsCoreService.getStripeClient();
   }
 
   async createPaymentIntent(orderCode: string) {

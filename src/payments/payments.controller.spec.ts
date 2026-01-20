@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
+import { PaymentsCoreService } from '../payments-core/payments-core.service';
 
 const createResponse = () => ({
   redirect: jest.fn(),
@@ -30,7 +31,16 @@ describe('PaymentsController', () => {
 
     const moduleRef = await Test.createTestingModule({
       controllers: [PaymentsController],
-      providers: [{ provide: PaymentsService, useValue: paymentsService }],
+      providers: [
+        { provide: PaymentsService, useValue: paymentsService },
+        {
+          provide: PaymentsCoreService,
+          useValue: {
+            getStripeClient: jest.fn(),
+            getWebhookSecret: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = moduleRef.get(PaymentsController);
